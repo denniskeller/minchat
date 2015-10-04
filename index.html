@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chat</title>
+	<style>
+		html, body, ul {
+			margin: 0;
+			padding: 0;
+		}
+		ul {
+			list-style-type: none;
+		}
+		html {
+			height: 100%;
+		}
+		body {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
+		ul#messages {
+			flex: 1;
+			overflow-y: scroll;
+		}
+		form#post {
+			display: flex;
+			flex-direction: row;
+			padding: 10px;
+		}
+		form#post * {
+			margin: 5px;
+		}
+		form#post input#editmsg {
+			flex: 1;
+		}
+	</style>
+</head>
+<body>
+	<ul id="messages">
+	</ul>
+	<form id="post">
+		<input type="text" id="editmsg" autofocus>
+		<input type="submit" id="postbtn" value="Send">
+	</form>
+	
+	<script>
+		document.getElementById('post').addEventListener('submit', function(ev) {
+			ev.preventDefault();
+			var req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState === 4) {
+					document.getElementById('post').reset();
+				}
+			};
+			req.open('POST', '/msg');
+			req.send(document.getElementById('editmsg').value);
+		});
+		document.getElementById('postbtn').addEventListener('click', function(ev) {
+			document.getElementById('editmsg').focus();
+		});
+		function mkreq() {
+			var req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState === 4) {
+					var li = document.createElement('li');
+					li.appendChild(document.createTextNode(req.responseText));
+					document.getElementById('messages').appendChild(li);
+					li.scrollIntoView();
+					if (req.status === 404) {
+						document.getElementById('messages').innerHTML = '';
+					}
+					setTimeout(mkreq, req.status === 200 ? 0 : 1000);
+				}
+			};
+			req.open('GET', '/msg/' + document.getElementById('messages').children.length);
+			req.send();
+		}
+		mkreq();
+	</script>
+</body>
+</html>
